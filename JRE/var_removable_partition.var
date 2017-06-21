@@ -13,4 +13,6 @@ description: |
     partitions that are required on the local system.
 
 options:
+    option_1: {"dev_cdrom": "/dev/cdrom"}
     option_2: {"dev_dvd": "/dev/dvd"}
+

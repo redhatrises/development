@@ -27,8 +27,6 @@ rationale: |
     deployment.properties file exists. Without the deployment.config file,
     setting particular options for the Java control panel is impossible.
 
-oval: java_jre_deployment_config_exists
-
 identifiers:
       cce:
       stig: JRE0070-UX
@@ -36,23 +34,3 @@ identifiers:
 references:
       nist: DCBP-1
       disa:
-
-variable:
-    title: Removable Partition
-    var_id: var_removable_partition
-    type: string
-    operator: equals
-    interactive: 0
-    description: |
-        This value is used by the checks 
-        mount_option_nodev_removable_partitions,
-        mount_option_nodev_removable_partitions, and
-        mount_option_nodev_removable_partitions to ensure that the correct
-        mount options are set on partitions mounted from
-        removable media such as CD-ROMs, USB keys, and floppy drives. This
-        value should be modified to reflect any removable
-        partitions that are required on the local system.
-
-    options:
-        option_2: {"dev_dvd": "/dev/dvd"}
-
