@@ -137,13 +137,14 @@ def yaml_to_xml_mapping(content, xmltree):
     write_file("shorthand.xml", xmlfile)
 
 
-def read_yamls_in_dirs(file_type, tree):
-    for filename in sorted(os.listdir('.')):
-        if filename.endswith(".%s" % file_type):
-            with open(os.path.join('.', filename), 'r') as content_file:
-                content = yaml.safe_load(content_file)
-                if content['documentation_complete'] is not False:
-                    yaml_to_xml_mapping(content, tree)
+def read_yamls_in_dirs(file_type, tree, directory):
+    for dirs in directory:
+        for filename in sorted(os.listdir(dirs)):
+            if filename.endswith(".%s" % file_type):
+                with open(os.path.join(dirs, filename), 'r') as content_file:
+                    content = yaml.safe_load(content_file)
+                    if content['documentation_complete'] is not False:
+                        yaml_to_xml_mapping(content, tree)
 
 
 def write_file(filename, content):
@@ -158,6 +159,9 @@ def main():
             help="Generate XCCDF content")
     xccdf_parser.add_argument('--shorthand', action="store_true",
             help="Merges content together to create a XML file")
+    xccdf_parser.add_argument("directory", metavar="DIRECTORY", nargs="+",
+            help="Location of content to combine into the final document")
+
 
     args, unknown = parser.parse_known_args()
     if unknown:
@@ -169,14 +173,16 @@ def main():
     if len(sys.argv) < 3:
         print parser.print_help()
 
+    directory = args.directory
+
     if args.shorthand:
         body = ""
         for prefix, uri in xccdf_ns.items():
              ET.register_namespace(prefix, uri)
         tree = ET.Element('Benchmark')
-        xmlfile = read_yamls_in_dirs('group', tree)
-        xmlfile = read_yamls_in_dirs('var', tree)
-        xmlfile = read_yamls_in_dirs('rule', tree)
+        xmlfile = read_yamls_in_dirs('group', tree, directory)
+        xmlfile = read_yamls_in_dirs('var', tree, directory)
+        xmlfile = read_yamls_in_dirs('rule', tree, directory)
 
 
 if __name__ == "__main__":
