@@ -42,6 +42,9 @@ xccdf_ns = {'xsi': "http://www.w3.org/2001/XMLSchema-instance",
              'lang': "en-US",
              }
 
+script_extensions = ('.yml', '.sh', '.anaconda', '.pp')
+ssg_file_ingest_order = ['group', 'var', 'rule', 'anaconda', 'sh', 'yml', 'pp']
+
 
 def common_xccdf_content(content, xml_tree):
     description = yaml_key_value(content, 'description')
@@ -64,6 +67,25 @@ def yaml_key_value(content, key):
         return content[key]
     except:
         pass
+
+
+def script_to_xml_mapping(content, filename, xmltree):
+    if filename.endswith('.yml'):
+        system = "urn:xccdf:fix:script:ansible"
+    elif filename.endswith('.sh'):
+        system = "urn:xccdf:fix:script:sh"
+    elif filename.endswith('.anaconda'):
+        system = "urn:redhat:anaconda:pre"
+    elif filename.endswith('.pp'):
+        system = "urn:xccdf:fix:script:puppet"
+
+    filename = filename.split('.')[0]
+    for rule in xmltree.iter('Rule'):
+        if rule.attrib['id'] == filename:
+            script = ET.SubElement(rule, 'fix', system=system)
+            script.text = content
+
+    return xmltree
 
 
 def yaml_to_xml_mapping(content, xmltree):
@@ -133,19 +155,27 @@ def yaml_to_xml_mapping(content, xmltree):
     #xmlstr = minidom.parseString(ET.tostring(xmltree)).toprettyxml(indent="   ")
     #with open("test.xml", "w") as f:
     #    f.write(xmlstr)
-    xmlfile = ET.tostring(xmltree, encoding='utf8', method='xml')
-    write_file("shorthand.xml", xmlfile)
+    #xmlfile = ET.tostring(xmltree, encoding='utf8', method='xml')
+    #write_file("shorthand.xml", xmlfile)
+    return xmltree
 
 
-def read_yamls_in_dirs(file_type, tree, directory):
+def read_content_in_dirs(filetype, tree, directory):
     for dirs in directory:
-        for filename in sorted(os.listdir(dirs)):
-            if filename.endswith(".%s" % file_type):
-                with open(os.path.join(dirs, filename), 'r') as content_file:
-                    content = yaml.safe_load(content_file)
-                    if content['documentation_complete'] is not False:
-                        yaml_to_xml_mapping(content, tree)
+        for root, dirs, files in sorted(os.walk(dirs)):
+            for filename in sorted(files):
+                if filename.endswith(".%s" % filetype):
+                    with open(os.path.join(root, filename), 'r') as content_file:
+                        if not filename.endswith(script_extensions):
+                            content = yaml.safe_load(content_file)
+                            if content['documentation_complete'] is not False:
+                                tree = yaml_to_xml_mapping(content, tree)
+                        else:
+                            content = content_file.read()
+                            tree = script_to_xml_mapping(content, filename, tree)
 
+    tree = ET.tostring(tree)
+    write_file("shorthand.xml", tree)
 
 def write_file(filename, content):
     with open(filename, "w") as f:
@@ -180,9 +210,8 @@ def main():
         for prefix, uri in xccdf_ns.items():
              ET.register_namespace(prefix, uri)
         tree = ET.Element('Benchmark')
-        xmlfile = read_yamls_in_dirs('group', tree, directory)
-        xmlfile = read_yamls_in_dirs('var', tree, directory)
-        xmlfile = read_yamls_in_dirs('rule', tree, directory)
+        for order in ssg_file_ingest_order:
+            xmlfile = read_content_in_dirs(order, tree, directory)
 
 
 if __name__ == "__main__":
