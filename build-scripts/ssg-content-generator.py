@@ -42,8 +42,8 @@ xccdf_ns = {'xsi': "http://www.w3.org/2001/XMLSchema-instance",
              'lang': "en-US",
              }
 
-script_extensions = ('.yml', '.sh', '.anaconda', '.pp')
-ssg_file_ingest_order = ['group', 'var', 'rule', 'anaconda', 'sh', 'yml', 'pp']
+script_extensions = ('.yml', '.sh', '.anaconda', '.pp', '.rb')
+ssg_file_ingest_order = ['group', 'var', 'rule', 'anaconda', 'sh', 'yml', 'pp', 'rb']
 
 
 def common_xccdf_content(content, xml_tree):
@@ -78,6 +78,8 @@ def script_to_xml_mapping(content, filename, xmltree):
         system = "urn:redhat:anaconda:pre"
     elif filename.endswith('.pp'):
         system = "urn:xccdf:fix:script:puppet"
+    elif filename.endswith('.rb'):
+        system = "urn:xccdf:fix:script:chef"
 
     filename = filename.split('.')[0]
     for rule in xmltree.iter('Rule'):
