@@ -33,17 +33,13 @@ except ImportError:
 
 
 xccdf_ns = {'xsi': "http://www.w3.org/2001/XMLSchema-instance",
-             'xhtml': "http://www.w3.org/1999/xhtml",
-             'dc': "http://purl.org/dc/elements/1.1/",
-             'id': "product-name",
-             'schemaLocation': "http://checklists.nist.gov/xccdf/1.1 xccdf-1.1.4.xsd",
-             'style': "SCAP_1.1",
-             'resolved': "false",
-             'lang': "en-US",
-             }
+            'xhtml': "http://www.w3.org/1999/xhtml",
+            'dc': "http://purl.org/dc/elements/1.1/",
+           }
 
 script_extensions = ('.yml', '.sh', '.anaconda', '.pp', '.rb')
-ssg_file_ingest_order = ['group', 'var', 'rule', 'anaconda', 'sh', 'yml', 'pp', 'rb']
+ssg_file_ingest_order = ['group', 'var', 'rule', 'anaconda', 'sh', 'yml', 'pp',
+                         'rb']
 
 
 def common_xccdf_content(content, xml_tree):
@@ -179,6 +175,7 @@ def read_content_in_dirs(filetype, tree, directory):
     tree = ET.tostring(tree)
     write_file("shorthand.xml", tree)
 
+
 def write_file(filename, content):
     with open(filename, "w") as f:
         f.write(content)
@@ -209,9 +206,16 @@ def main():
 
     if args.shorthand:
         body = ""
-        for prefix, uri in xccdf_ns.items():
-             ET.register_namespace(prefix, uri)
         tree = ET.Element('Benchmark')
+        tree.set("id", "product-name")
+        tree.set("xsi:schemaLocation", "http://checklists.nist.gov/xccdf/1.1 xccdf-1.1.4.xsd")
+        tree.set("style", "SCAP_1.1")
+        tree.set("resolved", "false")
+        tree.set("xml:lang", "en-US")
+
+        for prefix, uri in xccdf_ns.items():
+            tree.set("xmlns:" + prefix, uri)
+
         for order in ssg_file_ingest_order:
             xmlfile = read_content_in_dirs(order, tree, directory)
 
