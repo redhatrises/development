@@ -188,6 +188,22 @@ def main():
             help="Generate XCCDF content")
     xccdf_parser.add_argument('--shorthand', action="store_true",
             help="Merges content together to create a XML file")
+    xccdf_parser.add_argument('--product', action="store",
+            default="product_name", required=False,
+            help="Name of the product [Default: %(default)s]")
+    xccdf_parser.add_argument('--scap_version', action="store",
+            default="SCAP_1.1", required=False,
+            help="SCAP version [Default: %(default)s]")
+    xccdf_parser.add_argument('--schema', action="store",
+            default="http://checklists.nist.gov/xccdf/1.1 xccdf-1.1.4.xsd",
+            required=False,
+            help="Schema namespace and XML schema [Default: %(default)s]")
+    xccdf_parser.add_argument('--resolved', action="store",
+            default='false', required=False,
+            help=" [Default: %(default)s]")
+    xccdf_parser.add_argument('--lang', action="store",
+            default="en_US", required=False,
+            help="Language of XML file [Default: %(default)s]")
     xccdf_parser.add_argument("directory", metavar="DIRECTORY", nargs="+",
             help="Location of content to combine into the final document")
 
@@ -207,11 +223,11 @@ def main():
     if args.shorthand:
         body = ""
         tree = ET.Element('Benchmark')
-        tree.set("id", "product-name")
-        tree.set("xsi:schemaLocation", "http://checklists.nist.gov/xccdf/1.1 xccdf-1.1.4.xsd")
-        tree.set("style", "SCAP_1.1")
-        tree.set("resolved", "false")
-        tree.set("xml:lang", "en-US")
+        tree.set("id", args.product)
+        tree.set("xsi:schemaLocation", args.schema)
+        tree.set("style", args.scap_version.upper())
+        tree.set("resolved", args.resolved.lower())
+        tree.set("xml:lang", args.lang)
 
         for prefix, uri in xccdf_ns.items():
             tree.set("xmlns:" + prefix, uri)
