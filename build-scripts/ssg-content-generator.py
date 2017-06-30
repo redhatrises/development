@@ -38,7 +38,7 @@ xccdf_ns = {'xsi': "http://www.w3.org/2001/XMLSchema-instance",
            }
 
 script_extensions = ('.yml', '.sh', '.anaconda', '.pp', '.rb')
-ssg_file_ingest_order = ['group', 'var', 'rule', 'anaconda', 'sh', 'yml', 'pp',
+ssg_file_ingest_order = ['benchmark', 'group', 'var', 'rule', 'anaconda', 'sh', 'yml', 'pp',
                          'rb']
 
 
@@ -87,6 +87,7 @@ def script_to_xml_mapping(content, filename, xmltree):
 
 
 def yaml_to_xml_mapping(content, xmltree):
+    benchmark = yaml_key_value(content, 'status')
     group = yaml_key_value(content, 'group_id')
     rule = yaml_key_value(content, 'rule_id')
     ocil = yaml_key_value(content, 'ocil')
@@ -99,7 +100,21 @@ def yaml_to_xml_mapping(content, xmltree):
     variable = yaml_key_value(content, 'var_id')
     option = yaml_key_value(content, 'options')
     option_val = yaml_key_value(content, 'option_val')
-    
+
+    if benchmark:
+        for bench in xmltree.iter('Benchmark'):
+            status = ET.SubElement(bench, 'status')
+            status.text = benchmark
+            grouping = common_xccdf_content(content, bench)
+            notice = ET.SubElement(bench, 'notice', id=content["notice"]["id"])
+            notice.text = content["notice"]["description"]
+            fmatter = ET.SubElement(bench, 'front-matter')
+            fmatter.text = content["front-matter"]
+            rmatter = ET.SubElement(bench, 'rear-matter')
+            rmatter.text = content["rear-matter"]
+            version = ET.SubElement(bench, 'version')
+            version.text = str(content["version"])
+
     if group:
         grouping = ET.Element('Group', id=group)
         grouping = common_xccdf_content(content, grouping)
@@ -147,7 +162,7 @@ def yaml_to_xml_mapping(content, xmltree):
         for pgroup in xmltree.iter('Group'):
             if pgroup.attrib['id'] == primary_group:
                 pgroup.append(grouping)
-    else:
+    elif not benchmark:
         xmltree.append(grouping)
 
     #xmlstr = minidom.parseString(ET.tostring(xmltree)).toprettyxml(indent="   ")
@@ -155,21 +170,27 @@ def yaml_to_xml_mapping(content, xmltree):
     #    f.write(xmlstr)
     #xmlfile = ET.tostring(xmltree, encoding='utf8', method='xml')
     #write_file("shorthand.xml", xmlfile)
+
     return xmltree
 
 
 def files_or_map(group_map, files):
     filenames = ''
+
+    if group_map["map"] == "":
+        return files
+
     for key, values in group_map.iteritems():
         for value in values:
             if value in files:
                 filenames = group_map["map"]
             else:
                 filenames = sorted(files)
+
     return filenames
 
 
-def read_content_in_dirs(filetype, tree, directory, group_map):
+def read_content_in_dirs(filetype, tree, directory, group_map = {"map": ""}):
     for dirs in directory:
         for root, dirs, files in sorted(os.walk(dirs)):
             for filename in files_or_map(group_map, files):
@@ -242,13 +263,13 @@ def main():
     directory = args.directory
 
     if args.shorthand:
-        body = ""
         tree = ET.Element('Benchmark')
         tree.set("id", args.product)
         tree.set("xsi:schemaLocation", args.schema)
         tree.set("style", args.scap_version.upper())
         tree.set("resolved", args.resolved.lower())
         tree.set("xml:lang", args.lang)
+        xmlfile = read_content_in_dirs('benchmark', tree, directory)
 
         try:
             group_map = read_group_map(directory)
