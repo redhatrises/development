@@ -158,12 +158,23 @@ def yaml_to_xml_mapping(content, xmltree):
     return xmltree
 
 
-def read_content_in_dirs(filetype, tree, directory):
+def files_or_map(group_map, files):
+    filenames = ''
+    for key, values in group_map.iteritems():
+        for value in values:
+            if value in files:
+                filenames = group_map["map"]
+            else:
+                filenames = sorted(files)
+    return filenames
+
+
+def read_content_in_dirs(filetype, tree, directory, group_map):
     for dirs in directory:
         for root, dirs, files in sorted(os.walk(dirs)):
-            for filename in sorted(files):
-                if filename.endswith(".%s" % filetype):
-                    with open(os.path.join(root, filename), 'r') as content_file:
+            for filename in files_or_map(group_map, files):
+                with open(os.path.join(root, filename), 'r') as content_file:
+                    if filename.endswith(".%s" % filetype):
                         if not filename.endswith(script_extensions):
                             content = yaml.safe_load(content_file)
                             if content['documentation_complete'] is not False:
@@ -174,6 +185,16 @@ def read_content_in_dirs(filetype, tree, directory):
 
     tree = ET.tostring(tree)
     write_file("shorthand.xml", tree)
+
+
+def read_group_map(directory):
+    for dirs in directory:
+        for root, dirs, files in sorted(os.walk(dirs)):
+            for filename in sorted(files):
+                if filename.endswith(".map"):
+                    with open(os.path.join(root, filename), 'r') as content_file:
+                        group_map = yaml.safe_load(content_file)
+    return group_map
 
 
 def write_file(filename, content):
@@ -229,11 +250,16 @@ def main():
         tree.set("resolved", args.resolved.lower())
         tree.set("xml:lang", args.lang)
 
+        try:
+            group_map = read_group_map(directory)
+        except:
+            group_map = {"map": ""}
+
         for prefix, uri in xccdf_ns.items():
             tree.set("xmlns:" + prefix, uri)
 
         for order in ssg_file_ingest_order:
-            xmlfile = read_content_in_dirs(order, tree, directory)
+            xmlfile = read_content_in_dirs(order, tree, directory, group_map)
 
 
 if __name__ == "__main__":
