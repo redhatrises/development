@@ -135,6 +135,10 @@ def yaml_to_xml_mapping(content, xmltree):
         else:
             grouping = common_xccdf_content(content, grouping)
 
+        for refined_values in yaml_key_value(content, "rule_configuration"):
+            refined = ET.SubElement(grouping, "refined-value", idref=refined_values["item"])
+            refined.set("selector", refined_values["selector"])
+
         for rules in content["rule_selection"]:
             rule = ET.SubElement(grouping, "select", idref=rules["rule"])
             try:
