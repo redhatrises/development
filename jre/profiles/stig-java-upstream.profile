@@ -17,7 +17,11 @@ description: |
 
 rule_selection:
     - rule: java_jre_deployment_config_exists
+      selected: true
     - rule: java_jre_deployment_config_properties
     - rule: java_jre_updated
 
+rule_configuration:
+    - item: login_banner_text
+      selector: usgcb_default
 
