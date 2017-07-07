@@ -1,17 +1,14 @@
 #!/usr/bin/python
 
-import datetime
 import os
 import os.path
-import errno
-import platform
 import re
 import sys
-import yaml
-import string
 import argparse
+import datetime
+
 from xml.dom import minidom
-from copy import deepcopy
+import yaml
 
 
 try:
@@ -25,42 +22,36 @@ except NameError:
     # for python2
     from sets import Set as set
 
-try:
-    from configparser import SafeConfigParser
-except ImportError:
-    # for python2
-    from ConfigParser import SafeConfigParser
-
 
 xccdf_ns = {"xsi": "http://www.w3.org/2001/XMLSchema-instance",
             "xhtml": "http://www.w3.org/1999/xhtml",
-            "dc": "http://purl.org/dc/elements/1.1/",
-           }
+            "dc": "http://purl.org/dc/elements/1.1/"}
 
-script_extensions = (".yml", ".sh", ".anaconda", ".pp", ".rb")
-ssg_file_ingest_order = ["benchmark", "profile", "group", "var", "rule", "anaconda", "sh", "yml", "pp",
-                         "rb"]
+script_extensions = (".yml", ".sh", ".anaconda", ".pp", ".rb", "chef", "py")
+ssg_file_ingest_order = ["benchmark", "profile", "group", "var", "rule",
+                         "anaconda", "sh", "yml", "pp", "chef", "rb", "py"]
+
+datestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d")
 
 
-def common_xccdf_content(content, xml_tree, title_override = None, desc_override = None):
-    description = yaml_key_value(content, "description")
-    name = yaml_key_value(content, "title")
+def fix_xml_elements(xmlfile):
+    fix_elements = {"&lt;pre&gt;": "<pre>",
+                    '&lt;/pre&gt;': '</pre>',
+                    '&lt;tt&gt;': '<tt>',
+                    '&lt;/tt&gt;': '</tt>',
+                    '&lt;li&gt;': '<li>',
+                    '&lt;/li&gt;': '</li>',
+                    '&lt;ul&gt;': '<ul>',
+                    '&lt;/ul&gt;': '</ul>',
+                    '&lt;br&gt;': '<br>',
+                    '&lt;br&gt;': '</br>',
+                    "&lt;i&gt;": "<i>",
+                    "&lt;/i&gt;": "</i>"}
 
-    if name:
-        title = ET.SubElement(xml_tree, "title")
-        title.text = name
-        if title_override is not None:
-            title.set("override", str(title_override).lower())
-    if description:
-        desc = ET.SubElement(xml_tree, "description")
-        desc.text = description
-        if desc_override is not None:
-            title.set("override", str(desc_override).lower())
+    for key, value in fix_elements.iteritems():
+        xmlfile = re.sub(key, value, xmlfile)
 
-        #for test in desc.iter():
-        #    print test.text
-
-    return xml_tree
+    return xmlfile
 
 
 def yaml_key_value(content, key):
@@ -79,8 +70,12 @@ def script_to_xml_mapping(content, filename, xmltree):
         system = "urn:redhat:anaconda:pre"
     elif filename.endswith(".pp"):
         system = "urn:xccdf:fix:script:puppet"
-    elif filename.endswith(".rb"):
+    elif filename.endswith(".chef"):
         system = "urn:xccdf:fix:script:chef"
+    elif filename.endswith(".rb"):
+        system = "urn:xccdf:fix:script:ruby"
+    elif filename.endswith(".py"):
+        system = "urn:xccdf:fix:script:python"
 
     filename = filename.split(".")[0]
     for rule in xmltree.iter("Rule"):
@@ -89,6 +84,24 @@ def script_to_xml_mapping(content, filename, xmltree):
             script.text = content
 
     return xmltree
+
+
+def common_xccdf_content(content, xml_tree, title_override=None, desc_override=None):
+    description = yaml_key_value(content, "description")
+    name = yaml_key_value(content, "title")
+
+    if name:
+        title = ET.SubElement(xml_tree, "title")
+        title.text = name
+        if title_override is not None:
+            title.set("override", str(title_override).lower())
+    if description:
+        desc = ET.SubElement(xml_tree, "description")
+        desc.text = description
+        if desc_override is not None:
+            title.set("override", str(desc_override).lower())
+
+    return xml_tree
 
 
 def yaml_to_xml_mapping(content, xmltree):
@@ -112,13 +125,13 @@ def yaml_to_xml_mapping(content, xmltree):
 
     if benchmark:
         for bench in xmltree.iter("Benchmark"):
-            status = ET.SubElement(bench, "status")
+            status = ET.SubElement(bench, "status", date=datestamp)
             status.text = benchmark
             grouping = common_xccdf_content(content, bench)
             notice = ET.SubElement(bench, "notice", id=content["notice"]["id"])
             notice.text = content["notice"]["description"]
             fmatter = ET.SubElement(bench, "front-matter")
-            fmatter.text = content["front-matter"]
+            fmatter = content["front-matter"]
             rmatter = ET.SubElement(bench, "rear-matter")
             rmatter.text = content["rear-matter"]
             version = ET.SubElement(bench, "version")
@@ -143,7 +156,7 @@ def yaml_to_xml_mapping(content, xmltree):
             rule = ET.SubElement(grouping, "select", idref=rules["rule"])
             try:
                 rule.set("selected", str(rules["selected"]).lower())
-            except:
+            except KeyError:
                 rule.set("selected", "true")
 
     if group:
@@ -158,8 +171,8 @@ def yaml_to_xml_mapping(content, xmltree):
         if option:
             for options in option:
                 for key, val  in content["options"][options].iteritems():
-                     opt = ET.SubElement(grouping, "value", selector=key)
-                     opt.text = val
+                    opt = ET.SubElement(grouping, "value", selector=key)
+                    opt.text = val
 
     if rule:
         grouping = ET.Element("Rule", id=rule)
@@ -221,7 +234,7 @@ def files_or_map(group_map, files):
     return filenames
 
 
-def read_content_in_dirs(filetype, tree, directory, group_map = {"map": ""}):
+def read_content_in_dirs(filetype, tree, directory, group_map={"map": ""}):
     for dirs in directory:
         for root, dirs, files in sorted(os.walk(dirs)):
             for filename in files_or_map(group_map, files):
@@ -235,8 +248,10 @@ def read_content_in_dirs(filetype, tree, directory, group_map = {"map": ""}):
                             content = content_file.read()
                             tree = script_to_xml_mapping(content, filename, tree)
 
-    tree = ET.tostring(tree)
-    write_file("shorthand.xml", tree)
+    xtree = ET.tostring(tree)
+    write_file("shorthand.xml", xtree)
+
+    return tree
 
 
 def read_group_map(directory):
@@ -250,39 +265,38 @@ def read_group_map(directory):
 
 
 def write_file(filename, content):
-    with open(filename, "w") as f:
-        f.write(content)
+    with open(filename, "w") as outputfile:
+        outputfile.write(content)
 
 
 def main():
     xccdf_xmlns = "http://checklists.nist.gov/xccdf/1.1"
     parser = argparse.ArgumentParser()
     sub_parser = parser.add_subparsers(help="Content Types")
-    xccdf_parser = sub_parser.add_parser("xccdf",
-            help="Generate XCCDF content")
+    xccdf_parser = sub_parser.add_parser("xccdf", help="Generate XCCDF content")
     xccdf_parser.add_argument("--shorthand", action="store_true",
-            help="Merges content together to create a XML file")
+                              help="Merges content together to create a XML file")
     xccdf_parser.add_argument("--product", action="store",
-            default="product_name", required=False,
-            help="Name of the product [Default: %(default)s]")
+                              default="product_name", required=False,
+                              help="Name of the product [Default: %(default)s]")
     xccdf_parser.add_argument("--scap_version", action="store",
-            default="SCAP_1.1", required=False,
-            help="SCAP version [Default: %(default)s]")
+                              default="SCAP_1.1", required=False,
+                              help="SCAP version [Default: %(default)s]")
     xccdf_parser.add_argument("--xccdf_xmlns", action="store",
-            default=xccdf_xmlns, required=False,
-            help="SCAP version [Default: %(default)s]")
+                              default=xccdf_xmlns, required=False,
+                              help="SCAP version [Default: %(default)s]")
     xccdf_parser.add_argument("--schema", action="store",
-            default=xccdf_xmlns + " xccdf-1.1.4.xsd",
-            required=False,
-            help="Schema namespace and XML schema [Default: %(default)s]")
+                              default=xccdf_xmlns + " xccdf-1.1.4.xsd",
+                              required=False,
+                              help="Schema namespace and XML schema [Default: %(default)s]")
     xccdf_parser.add_argument("--resolved", action="store",
-            default="false", required=False,
-            help=" [Default: %(default)s]")
+                              default="false", required=False,
+                              help=" [Default: %(default)s]")
     xccdf_parser.add_argument("--lang", action="store",
-            default="en_US", required=False,
-            help="Language of XML file [Default: %(default)s]")
+                              default="en_US", required=False,
+                              help="Language of XML file [Default: %(default)s]")
     xccdf_parser.add_argument("directory", metavar="DIRECTORY", nargs="+",
-            help="Location of content to combine into the final document")
+                              help="Location of content to combine into the final document")
 
     args, unknown = parser.parse_known_args()
     if unknown:
@@ -305,16 +319,17 @@ def main():
         tree.set("xml:lang", args.lang)
         xmlfile = read_content_in_dirs("benchmark", tree, directory)
 
-        try:
-            group_map = read_group_map(directory)
-        except:
-            group_map = {"map": ""}
+        group_map = read_group_map(directory)
 
         for prefix, uri in xccdf_ns.items():
             tree.set("xmlns:" + prefix, uri)
 
         for order in ssg_file_ingest_order:
             xmlfile = read_content_in_dirs(order, tree, directory, group_map)
+
+        xmlfile = ET.tostring(xmlfile)
+        xmlfile = fix_xml_elements(xmlfile)
+        write_file("shorthand.xml", xmlfile)
 
 
 if __name__ == "__main__":
