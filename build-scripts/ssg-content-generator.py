@@ -6,8 +6,6 @@ import re
 import sys
 import argparse
 import datetime
-
-from xml.dom import minidom
 import yaml
 
 
@@ -209,12 +207,6 @@ def yaml_to_xml_mapping(content, xmltree):
     elif not benchmark:
         xmltree.append(grouping)
 
-    #xmlstr = minidom.parseString(ET.tostring(xmltree)).toprettyxml(indent="   ")
-    #with open("test.xml", "w") as f:
-    #    f.write(xmlstr)
-    #xmlfile = ET.tostring(xmltree, encoding="utf8", method="xml")
-    #write_file("shorthand.xml", xmlfile)
-
     return xmltree
 
 
@@ -247,9 +239,6 @@ def read_content_in_dirs(filetype, tree, directory, group_map={"map": ""}):
                         else:
                             content = content_file.read()
                             tree = script_to_xml_mapping(content, filename, tree)
-
-    xtree = ET.tostring(tree)
-    write_file("shorthand.xml", xtree)
 
     return tree
 
