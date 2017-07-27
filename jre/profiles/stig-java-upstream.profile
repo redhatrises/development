@@ -17,8 +17,18 @@ description: |
 
 rule_selection:
     - rule: java_jre_deployment_config_exists
-      selected: true
     - rule: java_jre_deployment_config_properties
+    - rule: java_jre_updated
+    - rule: java_jre_deployment_config_exists
+    - rule: java_jre_deployment_config_properties
+    - rule: java_jre_deployment_config_mandatory
+    - rule: java_jre_deployment_properties_exists
+    - rule: java_jre_untrusted_sources
+    - rule: java_jre_untrusted_sources_locked
+    - rule: java_jre_validation_crl
+    - rule: java_jre_validation_crl_locked
+    - rule: java_jre_validation_ocsp
+    - rule: java_jre_validation_ocsp_locked
     - rule: java_jre_updated
 
 rule_configuration:

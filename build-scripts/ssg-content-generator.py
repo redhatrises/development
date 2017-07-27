@@ -26,8 +26,8 @@ xccdf_ns = {"xsi": "http://www.w3.org/2001/XMLSchema-instance",
             "dc": "http://purl.org/dc/elements/1.1/"}
 
 script_extensions = (".yml", ".sh", ".anaconda", ".pp", ".rb", "chef", "py")
-ssg_file_ingest_order = ["benchmark", "profile", "group", "var", "rule",
-                         "anaconda", "sh", "yml", "pp", "chef", "rb", "py"]
+ssg_file_ingest_order = ("benchmark", "profile", "group", "var", "rule",
+                         "anaconda", "sh", "yml", "pp", "chef", "rb", "py")
 
 datestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d")
 
@@ -41,10 +41,13 @@ def fix_xml_elements(xmlfile):
                     '&lt;/li&gt;': '</li>',
                     '&lt;ul&gt;': '<ul>',
                     '&lt;/ul&gt;': '</ul>',
-                    '&lt;br&gt;': '<br>',
-                    '&lt;br&gt;': '</br>',
+                    '&lt;br/&gt;': '<br/>',
+                    '&lt;product-name-macro/&gt;': '<product-name-macro/>',
+                    "&lt;weblink-macro": "<weblink-macro",
                     "&lt;i&gt;": "<i>",
-                    "&lt;/i&gt;": "</i>"}
+                    "&lt;/i&gt;": "</i>",
+                    "&lt;br": "<br",
+                    "/&gt;": "/>"}
 
     for key, value in fix_elements.iteritems():
         xmlfile = re.sub(key, value, xmlfile)
