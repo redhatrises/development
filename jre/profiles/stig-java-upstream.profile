@@ -2,7 +2,6 @@ documentation_complete: true
 title: Java Runtime Environment (JRE) STIG
 title_override: true
 profile_id: stig-java-upstream
-extends: test
 
 description: |
     The Java Runtime Environment (JRE) is a bundle developed
