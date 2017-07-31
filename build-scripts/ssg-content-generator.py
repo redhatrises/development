@@ -33,6 +33,7 @@ datestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d")
 
 
 def fix_xml_elements(xmlfile):
+    # Horrible hack function. Should figure out a way to not have this at all
     fix_elements = {"&lt;pre&gt;": "<pre>",
                     '&lt;/pre&gt;': '</pre>',
                     '&lt;tt&gt;': '<tt>',
@@ -88,6 +89,7 @@ def script_to_xml_mapping(content, filename, xmltree):
 
 
 def common_xccdf_content(content, xml_tree, title_override=None, desc_override=None):
+    # Can we add more to this? Then re-organize the tree? Make it simpler
     description = yaml_key_value(content, "description")
     name = yaml_key_value(content, "title")
 
@@ -106,6 +108,7 @@ def common_xccdf_content(content, xml_tree, title_override=None, desc_override=N
 
 
 def yaml_to_xml_mapping(content, xmltree):
+    # How can we clean this up and make it simpler if at all?
     benchmark = yaml_key_value(content, "status")
     profile = yaml_key_value(content, "profile_id")
     extends = yaml_key_value(content, "extends")
@@ -115,7 +118,7 @@ def yaml_to_xml_mapping(content, xmltree):
     rule = yaml_key_value(content, "rule_id")
     ocil = yaml_key_value(content, "ocil")
     rationale = yaml_key_value(content, "rationale")
-    oval_id = yaml_key_value(content, "oval")
+    #oval_id = yaml_key_value(content, "oval")
     identifiers = yaml_key_value(content, "identifiers")
     references = yaml_key_value(content, "references")
     warning = yaml_key_value(content, "warning")
@@ -187,9 +190,9 @@ def yaml_to_xml_mapping(content, xmltree):
     if rationale:
         rationale_elem = ET.SubElement(grouping, "rationale")
         rationale_elem.text = rationale
-    if oval_id:
+    if rule:
         oval = ET.SubElement(grouping, "oval")
-        oval.set("id", oval_id)
+        oval.set("id", rule)
         if variable:
             oval.set("value", variable["id"])
     if identifiers:
@@ -216,6 +219,7 @@ def yaml_to_xml_mapping(content, xmltree):
 
 
 def files_or_map(group_map, files):
+    # If we can remove this, great!
     filenames = ""
 
     if group_map["map"] == "":
@@ -232,6 +236,7 @@ def files_or_map(group_map, files):
 
 
 def read_content_in_dirs(filetype, tree, directory, group_map={"map": ""}):
+    # Some way to make this simpler?
     for dirs in directory:
         for root, dirs, files in sorted(os.walk(dirs)):
             for filename in files_or_map(group_map, files):
@@ -249,6 +254,7 @@ def read_content_in_dirs(filetype, tree, directory, group_map={"map": ""}):
 
 
 def read_group_map(directory):
+    # If we can remove this, great!
     for dirs in directory:
         for root, dirs, files in sorted(os.walk(dirs)):
             for filename in sorted(files):
@@ -305,6 +311,8 @@ def main():
     directory = args.directory
 
     if args.shorthand:
+        # Maybe call a class here which can handle different XCCDF generation options
+        # such as shorthand, xccdf-linked, xccdf-unlinked, etc.
         tree = ET.Element("Benchmark")
         tree.set("id", args.product)
         tree.set("xsi:schemaLocation", args.schema)
