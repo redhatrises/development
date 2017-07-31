@@ -30,8 +30,3 @@ rule_selection:
     - rule: java_jre_validation_ocsp
     - rule: java_jre_validation_ocsp_locked
     - rule: java_jre_updated
-
-rule_configuration:
-    - item: login_banner_text
-      selector: usgcb_default
-
