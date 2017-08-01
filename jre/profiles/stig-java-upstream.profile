@@ -17,9 +17,6 @@ description: |
 rule_selection:
     - rule: java_jre_deployment_config_exists
     - rule: java_jre_deployment_config_properties
-    - rule: java_jre_updated
-    - rule: java_jre_deployment_config_exists
-    - rule: java_jre_deployment_config_properties
     - rule: java_jre_deployment_config_mandatory
     - rule: java_jre_deployment_properties_exists
     - rule: java_jre_untrusted_sources

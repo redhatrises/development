@@ -293,7 +293,7 @@ def main():
                               default="false", required=False,
                               help=" [Default: %(default)s]")
     xccdf_parser.add_argument("--lang", action="store",
-                              default="en_US", required=False,
+                              default="en-US", required=False,
                               help="Language of XML file [Default: %(default)s]")
     xccdf_parser.add_argument("directory", metavar="DIRECTORY", nargs="+",
                               help="Location of content to combine into the final document")
