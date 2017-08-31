@@ -7,6 +7,7 @@ import sys
 import argparse
 import datetime
 import yaml
+import string
 
 
 try:
@@ -20,20 +21,20 @@ except NameError:
     # for python2
     from sets import Set as set
 
+sys.path.insert(0, os.path.join(
+        os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+        "modules"))
+from xccdf_generator import XCCDFGeneratorFromYAML
 
-xccdf_ns = {"xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "xhtml": "http://www.w3.org/1999/xhtml",
-            "dc": "http://purl.org/dc/elements/1.1/"}
 
 script_extensions = (".yml", ".sh", ".anaconda", ".pp", ".rb", "chef", "py")
+ssg_guide_extensions = ("benchmark", "profile", "group", "var", "rule")
 ssg_file_ingest_order = ("benchmark", "profile", "group", "var", "rule",
                          "anaconda", "sh", "yml", "pp", "chef", "rb", "py")
 
-datestamp = datetime.datetime.utcnow().strftime("%Y-%m-%d")
-
 
 def fix_xml_elements(xmlfile):
-    # Horrible hack function. Should figure out a way to not have this at all
+    # Horrible hack function. This should be replaced.
     fix_elements = {"&lt;pre&gt;": "<pre>",
                     '&lt;/pre&gt;': '</pre>',
                     '&lt;tt&gt;': '<tt>',
@@ -51,217 +52,36 @@ def fix_xml_elements(xmlfile):
                     "/&gt;": "/>"}
 
     for key, value in fix_elements.iteritems():
-        xmlfile = re.sub(key, value, xmlfile)
+        xmlfile = xmlfile.replace(key, value)
 
     return xmlfile
 
 
-def yaml_key_value(content, key):
-    try:
-        return content[key]
-    except:
-        pass
+def custom_sort(files_list, ordered_list):
+    custom_list = []
+
+    for order in ordered_list:
+        for files in files_list:
+            if files.endswith(order):
+                custom_list.append(files)
+
+    return custom_list
 
 
-def script_to_xml_mapping(content, filename, xmltree):
-    if filename.endswith(".yml"):
-        system = "urn:xccdf:fix:script:ansible"
-    elif filename.endswith(".sh"):
-        system = "urn:xccdf:fix:script:sh"
-    elif filename.endswith(".anaconda"):
-        system = "urn:redhat:anaconda:pre"
-    elif filename.endswith(".pp"):
-        system = "urn:xccdf:fix:script:puppet"
-    elif filename.endswith(".chef"):
-        system = "urn:xccdf:fix:script:chef"
-    elif filename.endswith(".rb"):
-        system = "urn:xccdf:fix:script:ruby"
-    elif filename.endswith(".py"):
-        system = "urn:xccdf:fix:script:python"
+def read_content_in_dirs(directory):
+    guide_files = []
+    script_files = []
 
-    filename = filename.split(".")[0]
-    for rule in xmltree.iter("Rule"):
-        if rule.attrib["id"] == filename:
-            script = ET.SubElement(rule, "fix", system=system)
-            script.text = content
-
-    return xmltree
-
-
-def common_xccdf_content(content, xml_tree, title_override=None, desc_override=None):
-    # Can we add more to this? Then re-organize the tree? Make it simpler
-    description = yaml_key_value(content, "description")
-    name = yaml_key_value(content, "title")
-
-    if name:
-        title = ET.SubElement(xml_tree, "title")
-        title.text = name
-        if title_override is not None:
-            title.set("override", str(title_override).lower())
-    if description:
-        desc = ET.SubElement(xml_tree, "description")
-        desc.text = description
-        if desc_override is not None:
-            title.set("override", str(desc_override).lower())
-
-    return xml_tree
-
-
-def yaml_to_xml_mapping(content, xmltree):
-    # How can we clean this up and make it simpler if at all?
-    benchmark = yaml_key_value(content, "status")
-    profile = yaml_key_value(content, "profile_id")
-    extends = yaml_key_value(content, "extends")
-    title_override = yaml_key_value(content, "title_override")
-    desc_override = yaml_key_value(content, "desc_override")
-    group = yaml_key_value(content, "group_id")
-    rule = yaml_key_value(content, "rule_id")
-    ocil = yaml_key_value(content, "ocil")
-    rationale = yaml_key_value(content, "rationale")
-    #oval_id = yaml_key_value(content, "oval")
-    identifiers = yaml_key_value(content, "identifiers")
-    references = yaml_key_value(content, "references")
-    warning = yaml_key_value(content, "warning")
-    primary_group = yaml_key_value(content, "primary_group")
-    variable = yaml_key_value(content, "var_id")
-    option = yaml_key_value(content, "options")
-    option_val = yaml_key_value(content, "option_val")
-
-    if benchmark:
-        for bench in xmltree.iter("Benchmark"):
-            status = ET.SubElement(bench, "status", date=datestamp)
-            status.text = benchmark
-            grouping = common_xccdf_content(content, bench)
-            notice = ET.SubElement(bench, "notice", id=content["notice"]["id"])
-            notice.text = content["notice"]["description"]
-            fmatter = ET.SubElement(bench, "front-matter")
-            fmatter = content["front-matter"]
-            rmatter = ET.SubElement(bench, "rear-matter")
-            rmatter.text = content["rear-matter"]
-            version = ET.SubElement(bench, "version")
-            version.text = str(content["version"])
-
-    if profile:
-        grouping = ET.Element("Profile", id=profile)
-        if extends:
-            grouping.set("extends", extends)
-        if title_override:
-            grouping = common_xccdf_content(content, grouping, title_override)
-        elif desc_override:
-            grouping = common_xccdf_content(content, grouping, desc_override)
-        else:
-            grouping = common_xccdf_content(content, grouping)
-        
-        refined_values = yaml_key_value(content, "rule_configuration")
-        if refined_values:
-            for refined_value in refined_values:
-                refined = ET.SubElement(grouping, "refined-value", idref=refined_value["item"])
-                refined.set("selector", refined_value["selector"])
-
-        for rules in content["rule_selection"]:
-            rule = ET.SubElement(grouping, "select", idref=rules["rule"])
-            try:
-                rule.set("selected", str(rules["selected"]).lower())
-            except KeyError:
-                rule.set("selected", "true")
-
-    if group:
-        grouping = ET.Element("Group", id=group)
-        grouping = common_xccdf_content(content, grouping)
-    if variable:
-        grouping = ET.Element("Value", id=variable)
-        grouping = common_xccdf_content(content, grouping)
-        grouping.set("type", content["type"])
-        grouping.set("operator", content["operator"])
-        grouping.set("interactive", str(content["interactive"]))
-        if option:
-            for options in option:
-                for key, val  in content["options"][options].iteritems():
-                    opt = ET.SubElement(grouping, "value", selector=key)
-                    opt.text = val
-
-    if rule:
-        grouping = ET.Element("Rule", id=rule)
-        grouping = common_xccdf_content(content, grouping)
-    if ocil:
-        ocil_elem = ET.SubElement(grouping, "ocil")
-        ocil_elem.set("clause", ocil["clause"])
-        ocil_elem.text = ocil["description"]
-    if rationale:
-        rationale_elem = ET.SubElement(grouping, "rationale")
-        rationale_elem.text = rationale
-    if rule:
-        oval = ET.SubElement(grouping, "oval")
-        oval.set("id", rule)
-        if variable:
-            oval.set("value", variable["id"])
-    if identifiers:
-        idents = ET.SubElement(grouping, "ident")
-        for ide in identifiers:
-            if identifiers[ide] is not None:
-                idents.set(ide, identifiers[ide])
-    if references:
-        refs = ET.SubElement(grouping, "ref")
-        for ref in references:
-            if references[ref] is not None:
-                refs.set(ref, references[ref])
-    if warning:
-        warn = ET.SubElement(grouping, "warning", category="general")
-        warn.text = warning
-    if primary_group:
-        for pgroup in xmltree.iter("Group"):
-            if pgroup.attrib["id"] == primary_group:
-                pgroup.append(grouping)
-    elif not benchmark:
-        xmltree.append(grouping)
-
-    return xmltree
-
-
-def files_or_map(group_map, files):
-    # If we can remove this, great!
-    filenames = ""
-
-    if group_map["map"] == "":
-        return sorted(files)
-
-    for key, values in group_map.iteritems():
-        for value in values:
-            if value in files:
-                filenames = group_map["map"]
-            else:
-                filenames = sorted(files)
-
-    return filenames
-
-
-def read_content_in_dirs(filetype, tree, directory, group_map={"map": ""}):
-    # Some way to make this simpler?
-    for dirs in directory:
-        for root, dirs, files in sorted(os.walk(dirs)):
-            for filename in files_or_map(group_map, files):
-                with open(os.path.join(root, filename), "r") as content_file:
-                    if filename.endswith(".%s" % filetype):
-                        if not filename.endswith(script_extensions):
-                            content = yaml.safe_load(content_file)
-                            if content["documentation_complete"] is not False:
-                                tree = yaml_to_xml_mapping(content, tree)
-                        else:
-                            content = content_file.read()
-                            tree = script_to_xml_mapping(content, filename, tree)
-
-    return tree
-
-
-def read_group_map(directory):
-    # If we can remove this, great!
     for dirs in directory:
         for root, dirs, files in sorted(os.walk(dirs)):
             for filename in sorted(files):
-                if filename.endswith(".map"):
-                    with open(os.path.join(root, filename), "r") as content_file:
-                        group_map = yaml.safe_load(content_file)
-    return group_map
+                filename = os.path.join(root, filename)
+                if filename.endswith(ssg_guide_extensions):
+                    guide_files.append(filename)
+                if filename.endswith(script_extensions):
+                    script_files.append(filename)
+
+    return (guide_files, script_files)
 
 
 def write_file(filename, content):
@@ -272,6 +92,9 @@ def write_file(filename, content):
 def main():
     xccdf_xmlns = "http://checklists.nist.gov/xccdf/1.1"
     parser = argparse.ArgumentParser()
+    parser.add_argument("--input_type", action="store",
+                        default="yaml", required=False,
+                        help="Input file format to ingest [Default: %(default)s]")
     sub_parser = parser.add_subparsers(help="Content Types")
     xccdf_parser = sub_parser.add_parser("xccdf", help="Generate XCCDF content")
     xccdf_parser.add_argument("--shorthand", action="store_true",
@@ -311,26 +134,15 @@ def main():
     directory = args.directory
 
     if args.shorthand:
-        # Maybe call a class here which can handle different XCCDF generation options
-        # such as shorthand, xccdf-linked, xccdf-unlinked, etc.
-        tree = ET.Element("Benchmark")
-        tree.set("id", args.product)
-        tree.set("xsi:schemaLocation", args.schema)
-        tree.set("style", args.scap_version.upper())
-        tree.set("resolved", args.resolved.lower())
-        tree.set("xml:lang", args.lang)
-        xmlfile = read_content_in_dirs("benchmark", tree, directory)
+        if args.input_type is "yaml":
+            (guide_files, script_files) = read_content_in_dirs(directory)
+            guide_files = custom_sort(guide_files, ssg_guide_extensions)
+            script_files = custom_sort(script_files, script_extensions)
+            xccdf = XCCDFGeneratorFromYAML(args.product, args.schema, args.scap_version,
+                                           args.resolved, args.lang)
+            xmlfile = xccdf.build(guide_files, args.shorthand)
 
-        group_map = read_group_map(directory)
-
-        for prefix, uri in xccdf_ns.items():
-            tree.set("xmlns:" + prefix, uri)
-
-        for order in ssg_file_ingest_order:
-            xmlfile = read_content_in_dirs(order, tree, directory, group_map)
-
-        xmlfile = ET.tostring(xmlfile)
-        xmlfile = fix_xml_elements(xmlfile)
+        xmlfile = fix_xml_elements(ET.tostring(xmlfile))
         write_file("shorthand.xml", xmlfile)
 
 
