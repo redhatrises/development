@@ -7,16 +7,16 @@ severity: medium
 
 description: |
     To ensure that certificate revocation checks are enabled, set
-    <tt>deployment.security.validation.crl</tt> to equal <tt>true</tt>
-    in <tt>/etc/.java/deployment/deployment.properties</tt>.
+    config_item="deployment.security.validation.crl" to equal config_value="true"
+    in config_item="/etc/.java/deployment/deployment.properties".
 
 ocil:
     clause: it does not exist or is not configured properly
     description: |
         To verify that revocation checks are enabled, run the following command:
-        <pre>$ grep 'validation.crl=true' /etc/.java/deployment/deployment.properties</pre>
+        code="$ grep 'validation.crl=true' /etc/.java/deployment/deployment.properties"
         If properly configured, the output should return:
-        <pre>deployment.security.validation.crl=true</pre>
+        code="deployment.security.validation.crl=true"
 
 rationale: |    
     Certificates may be revoked due to improper issuance, compromise of the certificate,

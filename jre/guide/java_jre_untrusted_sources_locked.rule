@@ -7,17 +7,17 @@ severity: medium
 
 description: |
     To ensure that users cannot change the untrusted sources settings,
-    add <tt>deployment.security.askgrantdialog.notinca.locked</tt> to
-    <tt>/etc/.java/deployment/deployment.properties</tt>.
+    add config_item="deployment.security.askgrantdialog.notinca.locked" to
+    config_item="/etc/.java/deployment/deployment.properties".
 
 ocil:
     clause: it does not exist or is not configured properly
     description: |
         To verify that users cannot change the untrusted sources settings,
         run the following command:
-        <pre>$ grep 'askgrantdialog.notinca.locked' /etc/.java/deployment/deployment.properties</pre>
+        code="$ grep 'askgrantdialog.notinca.locked' /etc/.java/deployment/deployment.properties"
         If properly configured, the output should return:
-        <pre>deployment.security.askgrantdialog.notinca.locked</pre>
+        code="deployment.security.askgrantdialog.notinca.locked"
 
 rationale: |    
     Permitting execution of signed Java applets from un-trusted sources may

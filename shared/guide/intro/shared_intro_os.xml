@@ -88,7 +88,7 @@ detection of problems.
 <title>Least Privilege</title>
 <description>
 Grant the least privilege necessary for user accounts and software to perform tasks.
-For example, <tt>sudo</tt> can be implemented to limit authorization to super user
+For example, config_item="sudo" can be implemented to limit authorization to super user
 accounts on the system only to designated personnel. Another example is to limit
 logins on server systems to only those administrators who need to log into them in
 order to perform administration tasks. Using SELinux also follows the principle of
@@ -133,10 +133,10 @@ which the system will be deployed as closely as possible.
 <description>
 Most of the actions listed in this document are written with the
 assumption that they will be executed by the root user running the
-<tt>/bin/bash</tt> shell. Commands preceded with a hash mark (#)
+config_item="/bin/bash" shell. Commands preceded with a hash mark (#)
 assume that the administrator will execute the commands as root, i.e.
-apply the command via <tt>sudo</tt> whenever possible, or use
-<tt>su</tt> to gain root privileges if <tt>sudo</tt> cannot be
+apply the command via config_item="sudo" whenever possible, or use
+config_item="su" to gain root privileges if config_item="sudo" cannot be
 used. Commands which can be executed as a non-root user are are preceded
 by a dollar sign ($) prompt.
 </description>
@@ -146,7 +146,7 @@ by a dollar sign ($) prompt.
 <title>Formatting Conventions</title>
 <description>
 Commands intended for shell execution, as well as configuration file text,
-are featured in a <tt>monospace font</tt>. <i>Italics</i> are used
+are featured in a config_item="monospace font". italics="Italics" are used
 to indicate instances where the system administrator must substitute
 the appropriate information into a command or configuration file.
 </description>

@@ -7,17 +7,17 @@ severity: medium
 
 description: |
     To configure the Java mandatory deployment setting, add or modify
-    <tt>deployment.system.config.mandatory</tt> to equal <tt>false</tt>
-    in <tt>/etc/.java/deployment/deployment.config</tt>.
+    config_item="deployment.system.config.mandatory" to equal config_value="false"
+    in config_item="/etc/.java/deployment/deployment.config".
 
 ocil:
     clause: it is not configured
     description: |
-        To verify that <tt>deployment.config</tt> is configured properly,
+        To verify that config_item="deployment.config" is configured properly,
         run the following command:
-        <pre>$ grep 'deployment.system.config.mandatory' /etc/.java/deployment/deployment.config</pre>
+        code="$ grep 'deployment.system.config.mandatory' /etc/.java/deployment/deployment.config"
         If properly configured, the output should return:
-        <pre>deployment.system.config.mandatory=false</pre>
+        code="deployment.system.config.mandatory=false"
 
 rationale: |    
     Without a proper path for the properties file, deployment would not be possible.

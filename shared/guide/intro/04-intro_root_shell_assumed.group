@@ -6,9 +6,9 @@ primary_group: how-to-use
 description: |
     Most of the actions listed in this document are written with the
     assumption that they will be executed by the root user running the
-    <tt>/bin/bash</tt> shell. Commands preceded with a hash mark (#)
+    config_item="/bin/bash" shell. Commands preceded with a hash mark (#)
     assume that the administrator will execute the commands as root, i.e.
-    apply the command via <tt>sudo</tt> whenever possible, or use
-    <tt>su</tt> to gain root privileges if <tt>sudo</tt> cannot be
+    apply the command via config_item="sudo" whenever possible, or use
+    config_item="su" to gain root privileges if config_item="sudo" cannot be
     used. Commands which can be executed as a non-root user are are preceded
     by a dollar sign ($) prompt.

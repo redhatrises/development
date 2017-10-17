@@ -7,17 +7,17 @@ severity: medium
 
 description: |
     To ensure that users cannot change certificate revocation check settings,
-    add <tt>deployment.security.validation.crl.locked</tt> to
-    <tt>/etc/.java/deployment/deployment.properties</tt>.
+    add config_item="deployment.security.validation.crl.locked" to
+    config_item="/etc/.java/deployment/deployment.properties".
 
 ocil:
     clause: it does not exist or is not configured properly
     description: |
         To verify that users cannot change revocation check settings,
         run the following command:
-        <pre>$ grep 'validation.crl.locked' /etc/.java/deployment/deployment.properties</pre>
+        code="$ grep 'validation.crl.locked' /etc/.java/deployment/deployment.properties"
         If properly configured, the output should return:
-        <pre>deployment.security.validation.crl.locked</pre>
+        code="deployment.security.validation.crl.locked"
 
 rationale: |    
     Permitting execution of an applet published with a revoked certificate may

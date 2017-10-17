@@ -7,9 +7,9 @@ severity: medium
 
 description: |
     If the Java configuration file does not exist, it can be added by running:
-    <pre>$ sudo mkdir -p -m 755 /etc/.java/deployment
+    code="$ sudo mkdir -p -m 755 /etc/.java/deployment
     $ sudo touch /etc/.java/deployment/deployment.config
-    $ sudo chmod 644 /etc/.java/deployment/deployment.config</pre>
+    $ sudo chmod 644 /etc/.java/deployment/deployment.config"
 
 ocil:
     clause: it does not exist
@@ -18,7 +18,7 @@ ocil:
         run the following command:
         {'pre', '$ ls /etc/.java/deployment'}
         The output should contain:
-        <pre>deployment.config</pre>"
+        code="deployment.config""
 
 rationale: |
     The deployment.config file is used for specifying the location and

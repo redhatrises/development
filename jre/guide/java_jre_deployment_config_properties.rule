@@ -7,18 +7,18 @@ severity: medium
 
 description: |
     To ensure that the Java properties file is set in
-    <tt>/etc/.java/deployment/deployment.config</tt>, add or modify
-    <tt>deployment.system.config</tt> to equal
-    <tt>file:///etc/.java/deployment/deployment.properties</tt>.
+    config_item="/etc/.java/deployment/deployment.config", add or modify
+    config_item="deployment.system.config" to equal
+    config_item="file:///etc/.java/deployment/deployment.properties".
 
 ocil:
     clause: it is not configured
     description: |
-        To verify that <tt>deployment.config</tt> is configured properly,
+        To verify that config_item="deployment.config" is configured properly,
         run the following command:
-        <pre>$ grep 'deployment.system.config=file' /etc/.java/deployment/deployment.config</pre>
+        code="$ grep 'deployment.system.config=file' /etc/.java/deployment/deployment.config"
         If properly configured, the output should return:
-        <pre>deployment.system.config=file:///etc/.java/deployment/deployment.properties</pre>
+        code="deployment.system.config=file:///etc/.java/deployment/deployment.properties"
 
 rationale: |    
     Without a proper path for the properties file, deployment would not be possible.

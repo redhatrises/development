@@ -7,18 +7,18 @@ severity: medium
 
 description: |
     If the Java properties file does not exist, it can be added by running:
-    <pre>$ sudo mkdir -p -m 755 /etc/.java/deployment
+    code="$ sudo mkdir -p -m 755 /etc/.java/deployment
     $ sudo touch /etc/.java/deployment/deployment.properties
-    $ sudo chmod 644 /etc/.java/deployment/deployment.properties</pre>
+    $ sudo chmod 644 /etc/.java/deployment/deployment.properties"
 
 ocil:
     clause: it does not exist
     description: |
-        To verify that the <tt>deployment.properties</tt> file exists,
+        To verify that the config_item="deployment.properties" file exists,
         run the following command:
-        <pre>$ ls /etc/.java/deployment</pre>
+        code="$ ls /etc/.java/deployment"
         The output should contain:
-        <pre>deployment.properties</pre>
+        code="deployment.properties"
 
 rationale: |    
     Each option in the Java control panel is represented by property keys.

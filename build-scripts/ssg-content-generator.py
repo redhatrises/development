@@ -35,21 +35,23 @@ ssg_file_ingest_order = ("benchmark", "profile", "group", "var", "rule",
 
 def fix_xml_elements(xmlfile):
     # Horrible hack function. This should be replaced.
-    fix_elements = {"&lt;pre&gt;": "<pre>",
-                    '&lt;/pre&gt;': '</pre>',
-                    '&lt;tt&gt;': '<tt>',
-                    '&lt;/tt&gt;': '</tt>',
+    fix_elements = {#"&lt;pre&gt;": "<pre>",
+                    #'&lt;/pre&gt;': '</pre>',
+                    #'&lt;tt&gt;': '<tt>',
+                    #'&lt;/tt&gt;': '</tt>',
                     '&lt;li&gt;': '<li>',
                     '&lt;/li&gt;': '</li>',
                     '&lt;ul&gt;': '<ul>',
                     '&lt;/ul&gt;': '</ul>',
                     '&lt;br/&gt;': '<br/>',
+                    "/&gt;": "/>",
                     '&lt;product-name-macro/&gt;': '<product-name-macro/>',
                     "&lt;weblink-macro": "<weblink-macro",
-                    "&lt;i&gt;": "<i>",
-                    "&lt;/i&gt;": "</i>",
+                    #"&lt;i&gt;": "<i>",
+                    #"&lt;/i&gt;": "</i>",
                     "&lt;br": "<br",
-                    "/&gt;": "/>"}
+                    #"/&gt;": "/>",
+                    }
 
     for key, value in fix_elements.iteritems():
         xmlfile = xmlfile.replace(key, value)

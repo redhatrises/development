@@ -7,17 +7,17 @@ severity: medium
 
 description: |
     To ensure that Java cannot execute from untrusted sources, set
-    <tt>deployment.security.askgrantdialog.notinca</tt> to equal <tt>false</tt>
-    in <tt>/etc/.java/deployment/deployment.properties</tt>.
+    config_item="deployment.security.askgrantdialog.notinca" to equal config_value="false"
+    in config_item="/etc/.java/deployment/deployment.properties".
 
 ocil:
     clause: it does not exist or is not configured properly
     description: |
         To verify that Java cannot execute from untrusted sources,
         run the following command:
-        <pre>$ grep 'askgrantdialog.notinca=false' /etc/.java/deployment/deployment.properties</pre>
+        code="$ grep 'askgrantdialog.notinca=false' /etc/.java/deployment/deployment.properties"
         If properly configured, the output should return:
-        <pre>deployment.security.askgrantdialog.notinca=false</pre>
+        code="deployment.security.askgrantdialog.notinca=false"
 
 rationale: |    
     Permitting execution of signed Java applets from un-trusted sources

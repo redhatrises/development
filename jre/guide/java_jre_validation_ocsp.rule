@@ -7,17 +7,17 @@ severity: medium
 
 description: |
     To ensure that online certificate verification is enabled, set
-    <tt>deployment.security.validation.ocsp</tt> to equal <tt>true</tt>
-    in <tt>/etc/.java/deployment/deployment.properties</tt>.
+    config_item="deployment.security.validation.ocsp" to equal config_value="true"
+    in config_item="/etc/.java/deployment/deployment.properties".
 
 ocil:
     clause: it does not exist or is not configured properly
     description: |
         To verify that online certificate verification is enabled,
         run the following command:
-        <pre>$ grep 'validation.ocsp=true' /etc/.java/deployment/deployment.properties</pre>
+        code="$ grep 'validation.ocsp=true' /etc/.java/deployment/deployment.properties"
         If properly configured, the output should return:
-        <pre>deployment.security.validation.ocsp=true</pre>
+        code="deployment.security.validation.ocsp=true"
 
 rationale: |    
     Online certificate validation provides a greater degree of validation of certificates
