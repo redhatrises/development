@@ -6,6 +6,7 @@ import argparse
 import datetime
 import yaml
 
+from xccdf_macros import *
 
 try:
     from xml.etree import cElementTree as ET
@@ -110,10 +111,10 @@ def xccdf_subelement(xccdftree, xccdf_element, yamlcontent, yaml_key, override=N
             if "clause" in yaml_key.keys():
                 new_element.set("clause", yaml_key["clause"])
             if "description" in yaml_key.keys():
-                new_element.text = yaml_key["description"]
+                new_element = transform_text_variables(new_element, yaml_key["description"])
         else:
             if xccdf_element is not "oval":
-                new_element.text = str(yaml_key)
+                new_element = transform_text_variables(new_element, str(yaml_key))
         if yaml_key_value(yamlcontent, override) is not None:
             new_element.set("override", str(yaml_key_value(yamlcontent, override)).lower())
         if attrib is not None:
